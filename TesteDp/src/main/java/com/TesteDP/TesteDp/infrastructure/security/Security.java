@@ -43,9 +43,10 @@ public class Security {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/usuario/register").permitAll()
-                        .requestMatchers("/admin/").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().hasAnyRole("ADMIN","USER")
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
