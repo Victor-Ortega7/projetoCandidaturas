@@ -2,19 +2,36 @@ package com.TesteDP.TesteDp.business;
 
 import com.TesteDP.TesteDp.infrastructure.entitys.Usuario;
 import com.TesteDP.TesteDp.infrastructure.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UsuarioService {
     private final UsuarioRepository repository;
+    private final PasswordEncoder encoder;
 
 
-    public UsuarioService(UsuarioRepository repository) {
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder encoder) {
         this.repository = repository;
+        this.encoder = encoder;
     }
 
-    public void salvarUsusario(Usuario usuario){
-        repository.saveAndFlush(usuario);
+
+    public Usuario salvarUsusario(Usuario usuario){
+        if (repository.findByEmail(usuario.getEmail()).isPresent()){
+            throw new RuntimeException("Email já cadastrado");
+        }
+        usuario.setPassword(encoder.encode(usuario.getPassword()));
+        return repository.save(usuario);
+    }
+
+    public Usuario autenticar(String email, String password){
+        Usuario usuario = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+        if (!encoder.matches(password,usuario.getPassword())){
+            throw new RuntimeException("Email ou senha inválidos");
+        }
+        return usuario;
     }
 
     public Usuario buscarUsuarioPorEmail(String email){
